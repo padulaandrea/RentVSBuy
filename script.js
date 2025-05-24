@@ -60,11 +60,10 @@ function calculateRentingScenario(inputs) {
     let investedAssets = inputs.currentSavings;
     let totalRentPaid = 0;
     let currentMonthlyExpenses = inputs.monthlyExpenses; // Initialize currentMonthlyExpenses
-
+    let netMonthlyPay = inputs.netMonthlyPay;
     // Extracting necessary inputs for clarity
     const {
         annualRentIncreaseDecimal,
-        netMonthlyPay,
         additionalBonus,
         spyReturnDecimal
     } = inputs;
@@ -75,6 +74,7 @@ function calculateRentingScenario(inputs) {
         if (year > 1) {
             currentAnnualRent *= (1 + annualRentIncreaseDecimal);
             currentMonthlyExpenses *= 1.03; // Apply 3% inflation to monthly expenses
+            netMonthlyPay *=1.03
         }
 
         const monthlyRentForYear = currentAnnualRent / 12;
@@ -126,7 +126,8 @@ function calculateBuyingScenario(inputs) {
     let currentMonthlyExpenses = inputs.monthlyExpenses;
     let currentMonthlyPropertyTax = (inputs.homePrice * inputs.propertyTaxRateDecimal) / 12;
     let cumulativeOutlay = 0;
-
+    let netMonthlyPay = inputs.netMonthlyPay;
+    let aduMonthlyIncome = inputs.aduMonthlyIncome;
     const {
         homePrice,
         downPaymentPercentDecimal,
@@ -135,14 +136,12 @@ function calculateBuyingScenario(inputs) {
         homeInsuranceRateDecimal,
         monthlyMaintenance,
         homeAppreciationDecimal,
-        netMonthlyPay,
         monthlyExpenses, // Assumed to be non-housing general expenses
         spyReturnDecimal,
         buyingClosingCostsPercentDecimal,
         currentSavings,
         additionalBonus,
         HOA,
-        aduMonthlyIncome // Destructure new input
     } = inputs;
 
     // Initial Purchase Calculations
@@ -186,6 +185,8 @@ function calculateBuyingScenario(inputs) {
         if (year > 1) {
             currentMonthlyExpenses *= 1.03;
             currentMonthlyPropertyTax *= 1.02;
+            netMonthlyPay *=1.03;
+            aduMonthlyIncome *=1.03;
         }
 
         // Mortgage P&I calculation (remains the same as it's based on fixed loan terms)
@@ -350,8 +351,8 @@ function displayInputSummary(inputs) {
 
     // Include ADU income in net monthly income for summary calculation
     const netMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
-    const savingsSurplusRenting = netMonthlyIncome - monthlyExpenses - monthlyRent - aduMonthlyIncome; // ADU income not available when renting
-    const savingsSurplusBuying = netMonthlyIncome - monthlyExpenses - totalMonthlyHousingCostsBuy;
+    const savingsSurplusRenting = netMonthlyIncome - monthlyExpenses - monthlyRent ; // ADU income not available when renting
+    const savingsSurplusBuying = netMonthlyIncome - monthlyExpenses - totalMonthlyHousingCostsBuy + aduMonthlyIncome;
 
 
     // --- 2. Create Table Structure ---
@@ -599,7 +600,7 @@ function displayDetailedBuyTable(buyData) {
         'Year', 'Mortgage Balance', 'Principal Paid (Annual)', 'Interest Paid (Annual)', 'Monthly P&I',
         'Monthly Property Tax (YoY 2% inc.)', 'Monthly Home Insurance', 'Monthly HOA','Monthly Maintenance',
         'Total Monthly Outlay', 'Annual Total Outlay', 'Cumulative Outlay',
-        'Monthly Expenses (YoY 3% inc.)', 'Net Monthly Pay (incl. ADU)',
+        'Monthly Expenses (YoY 3% inc.)', 'Net Monthly Pay incl. ADU (YoY 3% inc.)',
         'Monthly Invested (from income)', 'Annual Invested (from income)',
         'Beginning Invested Savings', 'Home Value', 'Home Equity / Net Profit from Sale',
         'Lost Cost (Cumulative)', 'End of Year Net Worth'
@@ -659,7 +660,7 @@ function displayDetailedRentTable(rentData) {
 
     const headers = [
         'Year', 'Monthly Rent', 'Annual Rent', 'Cumulative Rent Paid',
-        'Calculated Net Monthly Income', 'Monthly Expenses (YoY 3% inc.)',
+        'Calculated Net Monthly Income(YoY 3% inc.)', 'Monthly Expenses (YoY 3% inc.)',
         'Monthly Invested (from income)', 'Annual Invested (from income)',
         'Beginning Invested Savings', 'End of Year Net Worth'
     ];
