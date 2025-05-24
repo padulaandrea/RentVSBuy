@@ -56,9 +56,6 @@ function calculateRentingScenario(inputs) {
     const yearsToSimulate = 30;
     const rentResults = [];
 
-    const yearsToSimulate = 30;
-    const rentResults = [];
-
     let currentAnnualRent = inputs.monthlyRent * 12;
     let investedAssets = inputs.currentSavings;
     let totalRentPaid = 0;
@@ -82,9 +79,9 @@ function calculateRentingScenario(inputs) {
 
         const monthlyRentForYear = currentAnnualRent / 12;
         const calculatedNetMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
-        
+
         const annualLivingExpenses = currentMonthlyExpenses * 12;
-        
+
         // This is the cash flow available for investment from this year's income
         const monthlyInvestedFromIncome = calculatedNetMonthlyIncome - monthlyRentForYear - currentMonthlyExpenses;
         const annualInvestedFromIncome = monthlyInvestedFromIncome * 12;
@@ -93,7 +90,7 @@ function calculateRentingScenario(inputs) {
         investedAssets += annualInvestedFromIncome;
         // Then apply S&P return to the new total (including this year's savings)
         investedAssets *= (1 + spyReturnDecimal);
-        
+
         totalRentPaid += currentAnnualRent;
 
         rentResults.push({
@@ -125,7 +122,7 @@ function calculateBuyingScenario(inputs) {
     console.log("calculateBuyingScenario received inputs:", inputs);
     const yearsToSimulate = 30;
     const buyResults = [];
-    let totalUnrecoverableBuyCosts = 0; 
+    let totalUnrecoverableBuyCosts = 0;
     let currentMonthlyExpenses = inputs.monthlyExpenses;
     let currentMonthlyPropertyTax = (inputs.homePrice * inputs.propertyTaxRateDecimal) / 12;
     let cumulativeOutlay = 0;
@@ -163,7 +160,7 @@ function calculateBuyingScenario(inputs) {
             (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) /
             (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
     }
-    
+
     if (loanAmount <= 0) { // Handles cases like 100% down payment or invalid home price
         monthlyMortgagePayment = 0;
     }
@@ -184,14 +181,14 @@ function calculateBuyingScenario(inputs) {
         const beginningInvestedSavings = investedAssets; // Store at start of year
         let interestPaidThisYear = 0;
         let principalPaidThisYear = 0;
-        
+
         if (year > 1) {
             currentMonthlyExpenses *= 1.03;
             currentMonthlyPropertyTax *= 1.02;
         }
 
         // Mortgage P&I calculation (remains the same as it's based on fixed loan terms)
-        const annualMortgagePaymentsFixed = monthlyMortgagePayment * 12; 
+        const annualMortgagePaymentsFixed = monthlyMortgagePayment * 12;
         let actualAnnualMortgagePaidThisYear = 0;
 
         if (remainingLoanBalance > 0) {
@@ -209,7 +206,7 @@ function calculateBuyingScenario(inputs) {
                     monthlyPrincipal = monthlyMortgagePayment; // Assuming loanAmount > 0
                     monthlyInterest = 0;
                 }
-                
+
                 if (loanAmount <= 0) { // No loan
                     monthlyInterest = 0;
                     monthlyPrincipal = 0;
@@ -225,10 +222,10 @@ function calculateBuyingScenario(inputs) {
                 }
             }
         }
-        
+
         // If loanAmount was 0 initially, all mortgage related payments are 0
         actualAnnualMortgagePaidThisYear = (loanAmount > 0) ? (interestPaidThisYear + principalPaidThisYear) : 0;
-        
+
         // Yearly costs based on potentially updated values
         const annualPropertyTaxThisYear = currentMonthlyPropertyTax * 12;
         const monthlyHomeInsurance = (currentHomeValue * inputs.homeInsuranceRateDecimal) / 12;
@@ -236,17 +233,17 @@ function calculateBuyingScenario(inputs) {
         const annualMaintenanceThisYear = inputs.monthlyMaintenance * 12; // Constant based on input
 
         const totalAnnualHousingCosts = actualAnnualMortgagePaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
-        
+
         const netMonthlyPayForCalc = netMonthlyPay + (additionalBonus / 12) + aduMonthlyIncome;
         const annualNetIncomeInclADU = netMonthlyPayForCalc * 12;
         const annualLivingExpenses = currentMonthlyExpenses * 12;
-        
+
         const annualInvestedFromIncome = annualNetIncomeInclADU - totalAnnualHousingCosts - annualLivingExpenses;
 
         investedAssets += annualInvestedFromIncome;
         investedAssets *= (1 + spyReturnDecimal);
 
-        if (year > 1 || homeAppreciationDecimal !== 0) { 
+        if (year > 1 || homeAppreciationDecimal !== 0) {
              currentHomeValue *= (1 + homeAppreciationDecimal);
         }
 
@@ -255,7 +252,7 @@ function calculateBuyingScenario(inputs) {
 
         const unrecoverableCostsThisYear = interestPaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
         totalUnrecoverableBuyCosts += unrecoverableCostsThisYear;
-        
+
         const totalMonthlyOutlay = actualAnnualMortgagePaidThisYear/12 + currentMonthlyPropertyTax + monthlyHomeInsurance + inputs.monthlyMaintenance;
         cumulativeOutlay += totalAnnualHousingCosts;
 
@@ -471,7 +468,7 @@ function displayResults(rentData, buyData) {
             console.warn(`Missing buyData for year index ${i}.`);
             continue; // Skip this iteration if data is mismatched
         }
-        
+
         const yearRentData = rentData[i];
         const yearBuyData = buyData[i];
         const row = tbody.insertRow();
@@ -535,7 +532,7 @@ function displayResults(rentData, buyData) {
  */
 function displayUnrecoverableCosts(rentData, buyData) {
     const container = document.getElementById('unrecoverable-costs-container');
-    
+
     // Clear previous table if any, but keep H2 (or recreate H2 if preferred)
     const existingTable = container.querySelector('table');
     if (existingTable) {
@@ -545,7 +542,7 @@ function displayUnrecoverableCosts(rentData, buyData) {
     if (!rentData || !buyData || rentData.length === 0 || buyData.length === 0) {
         // Optionally display a message if data is missing
         // For now, just don't create the table if data isn't there
-        return; 
+        return;
     }
 
     const table = document.createElement('table');
@@ -561,7 +558,7 @@ function displayUnrecoverableCosts(rentData, buyData) {
     const tbody = table.createTBody();
     for (let i = 0; i < rentData.length; i++) {
         // Check if corresponding buyData exists for safety, though they should have same length
-        if (i >= buyData.length) continue; 
+        if (i >= buyData.length) continue;
 
         const yearRent = rentData[i];
         const yearBuy = buyData[i];
@@ -591,7 +588,7 @@ function displayDetailedBuyTable(buyData) {
     const table = document.createElement('table');
     const thead = table.createTHead();
     const headerRow = thead.insertRow();
-    
+
     const headers = [
         'Year', 'Mortgage Balance', 'Principal Paid (Annual)', 'Interest Paid (Annual)', 'Monthly P&I',
         'Monthly Property Tax (YoY 2% inc.)', 'Monthly Home Insurance', 'Monthly Maintenance',
@@ -652,11 +649,11 @@ function displayDetailedRentTable(rentData) {
     const table = document.createElement('table');
     const thead = table.createTHead();
     const headerRow = thead.insertRow();
-    
+
     const headers = [
-        'Year', 'Monthly Rent', 'Annual Rent', 'Cumulative Rent Paid', 
-        'Calculated Net Monthly Income', 'Monthly Expenses (YoY 3% inc.)', 
-        'Monthly Invested (from income)', 'Annual Invested (from income)', 
+        'Year', 'Monthly Rent', 'Annual Rent', 'Cumulative Rent Paid',
+        'Calculated Net Monthly Income', 'Monthly Expenses (YoY 3% inc.)',
+        'Monthly Invested (from income)', 'Annual Invested (from income)',
         'Beginning Invested Savings', 'End of Year Net Worth'
     ];
 
@@ -696,7 +693,7 @@ function displayCharts(rentData, buyData) {
         if (unrecoverableCostsChartInstance) unrecoverableCostsChartInstance.destroy();
         netWorthChartInstance = null;
         unrecoverableCostsChartInstance = null;
-        return; 
+        return;
     }
 
     const years = rentData.map(d => d.year); // Assuming years are consistent
@@ -742,7 +739,7 @@ function displayCharts(rentData, buyData) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true, 
+            maintainAspectRatio: true,
             plugins: {
                 title: { display: true, text: 'Net Worth Over Time' },
                 tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}` } }
@@ -871,7 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rentData = calculateRentingScenario(userInputs);
             const buyData = calculateBuyingScenario(userInputs);
             displayResults(rentData, buyData);
-            displayUnrecoverableCosts(rentData, buyData); 
+            displayUnrecoverableCosts(rentData, buyData);
             displayCharts(rentData, buyData); // Call the new chart function
             displayDetailedRentTable(rentData); // Added for detailed rent table
             displayDetailedBuyTable(buyData);   // Added for detailed buy table
