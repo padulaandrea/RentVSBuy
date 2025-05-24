@@ -214,6 +214,9 @@ input[type="range"] {
     font-weight: bold;
     color: var(--primary-color); /* Use primary color for emphasis */
 }
+#input-summary-container td {
+    vertical-align: top; /* Helps with multi-line content */
+}
 
 /* Unrecoverable Costs Table Styling */
 #unrecoverable-costs-container {
@@ -261,6 +264,44 @@ input[type="range"] {
     border-radius: 8px;
     background-color: var(--container-bg-color); /* Optional background for the chart area */
 }
+
+/* Monthly Cash Flow Container Styling */
+#monthly-cash-flow-container {
+    margin-top: 30px; /* Space above this section, similar to unrecoverable-costs-container */
+    margin-bottom: 30px; /* Space below this section */
+}
+#monthly-cash-flow-container h2 { /* Should inherit global h2 styles, but can be specific if needed */
+    text-align: center;
+    margin-bottom: 15px;
+    color: var(--neutral-text-color);
+}
+#monthly-cash-flow-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px; /* Space between H2 and table */
+    background-color: var(--container-bg-color);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+}
+#monthly-cash-flow-container th,
+#monthly-cash-flow-container td {
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    text-align: left;
+}
+#monthly-cash-flow-container th {
+    background-color: var(--primary-color); /* Matching other data table headers */
+    color: var(--container-bg-color); /* White text */
+}
+/* Right-align numerical data in monthly cash flow table */
+#monthly-cash-flow-container td:nth-child(2),
+#monthly-cash-flow-container th:nth-child(2),
+#monthly-cash-flow-container td:nth-child(3),
+#monthly-cash-flow-container th:nth-child(3) {
+    text-align: right;
+}
+
 
 canvas {
     max-width: 100%; /* Ensure canvas scales down */
