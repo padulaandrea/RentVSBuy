@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent vs. Buy Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Rent vs. Buy Calculator</h1>
+    <form id="calculatorForm">
+        <div>
+            <label for="netMonthlyPay">Net Monthly Pay:</label>
+            <input type="number" id="netMonthlyPay" placeholder="e.g., 15000">
+        </div>
+        <div>
+            <label for="monthlyExpenses">Monthly Expenses:</label>
+            <input type="number" id="monthlyExpenses" placeholder="e.g., 6000">
+        </div>
+        <div>
+            <label for="additionalBonus">Additional stock/bonus per year:</label>
+            <input type="number" id="additionalBonus" placeholder="e.g., 0">
+        </div>
+        <div>
+            <label for="homePrice">Home Price:</label>
+            <input type="number" id="homePrice" placeholder="e.g., 1850000">
+        </div>
+        <div>
+            <label for="monthlyRent">Monthly Rent:</label>
+            <input type="number" id="monthlyRent" placeholder="e.g., 6000">
+        </div>
+        <div>
+            <label for="annualRentIncrease">Annual Rent Increase %:</label>
+            <input type="number" id="annualRentIncrease" placeholder="e.g., 5">
+        </div>
+        <div>
+            <label for="interestRate">Interest Rate %:</label>
+            <input type="number" id="interestRate" placeholder="e.g., 5.75">
+        </div>
+        <div>
+            <label for="propertyTaxRate">Property Tax % (Annual):</label>
+            <input type="number" id="propertyTaxRate" placeholder="e.g., 1.11">
+        </div>
+        <div>
+            <label for="homeInsuranceRate">Home Insurance % of home value (Annual):</label>
+            <input type="number" id="homeInsuranceRate" placeholder="e.g., 0.20">
+        </div>
+        <div>
+            <label for="monthlyMaintenance">Maintenance (Monthly):</label>
+            <input type="number" id="monthlyMaintenance" placeholder="e.g., 500">
+        </div>
+        <div>
+            <label for="spyReturn">S&P 500 Annual Return %:</label>
+            <input type="number" id="spyReturn" placeholder="e.g., 8">
+        </div>
+        <div>
+            <label for="homeAppreciation">Annual Home Appreciation %:</label>
+            <input type="number" id="homeAppreciation" placeholder="e.g., 3">
+        </div>
+        <div>
+            <label for="downPaymentPercent">Down Payment %:</label>
+            <input type="number" id="downPaymentPercent" placeholder="e.g., 30">
+        </div>
+        <div>
+            <label for="buyingClosingCostsPercent">Buying Closing Costs %:</label>
+            <input type="number" id="buyingClosingCostsPercent" placeholder="e.g., 2">
+        </div>
+        <div>
+            <label for="currentSavings">Current Savings:</label>
+            <input type="number" id="currentSavings" placeholder="e.g., 800000">
+        </div>
+        <button type="button" id="calculateButton">Calculate</button>
+    </form>
+    <div id="results-container">
+        <!-- Results will be displayed here -->
+    </div>
+    <script src="script.js" defer></script>
+</body>
+</html>
