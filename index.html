@@ -11,66 +11,83 @@
     <form id="calculatorForm">
         <div>
             <label for="netMonthlyPay">Net Monthly Pay:</label>
-            <input type="number" id="netMonthlyPay" placeholder="e.g., 15000">
+            <input type="number" id="netMonthlyPay" value="15000" step="100"> <span class="unit-display">$</span>
         </div>
         <div>
             <label for="monthlyExpenses">Monthly Expenses:</label>
-            <input type="number" id="monthlyExpenses" placeholder="e.g., 6000">
+            <input type="number" id="monthlyExpenses" value="4000" step="100"> <span class="unit-display">$</span>
         </div>
         <div>
             <label for="additionalBonus">Additional stock/bonus per year:</label>
-            <input type="number" id="additionalBonus" placeholder="e.g., 0">
+            <input type="number" id="additionalBonus" value="5000" step="1000"> <span class="unit-display">$/year</span>
         </div>
         <div>
             <label for="homePrice">Home Price:</label>
-            <input type="number" id="homePrice" placeholder="e.g., 1850000">
+            <input type="number" id="homePrice" value="500000" step="10000"> <span class="unit-display">$</span>
         </div>
         <div>
             <label for="monthlyRent">Monthly Rent:</label>
-            <input type="number" id="monthlyRent" placeholder="e.g., 6000">
+            <input type="number" id="monthlyRent" value="2500" step="100"> <span class="unit-display">$</span>
         </div>
         <div>
             <label for="annualRentIncrease">Annual Rent Increase %:</label>
-            <input type="number" id="annualRentIncrease" placeholder="e.g., 5">
+            <input type="number" id="annualRentIncrease" value="3" step="0.1"> <span class="unit-display">%</span>
+            <input type="range" id="annualRentIncreaseSlider" min="0" max="15" step="0.5" value="3">
+            <span id="annualRentIncreaseSliderValueOutput">3%</span>
         </div>
         <div>
             <label for="interestRate">Interest Rate %:</label>
-            <input type="number" id="interestRate" placeholder="e.g., 5.75">
+            <input type="number" id="interestRate" value="6.0" step="0.01"> <span class="unit-display">%</span>
+            <input type="range" id="interestRateSlider" min="1" max="15" step="0.125" value="6.0">
+            <span id="interestRateSliderValueOutput">6.0%</span>
         </div>
         <div>
             <label for="propertyTaxRate">Property Tax % (Annual):</label>
-            <input type="number" id="propertyTaxRate" placeholder="e.g., 1.11">
+            <input type="number" id="propertyTaxRate" value="1.1" step="0.01"> <span class="unit-display">%</span>
+            <input type="range" id="propertyTaxRateSlider" min="0" max="5" step="0.1" value="1.1">
+            <span id="propertyTaxRateSliderValueOutput">1.1%</span>
         </div>
         <div>
             <label for="homeInsuranceRate">Home Insurance % of home value (Annual):</label>
-            <input type="number" id="homeInsuranceRate" placeholder="e.g., 0.20">
+            <input type="number" id="homeInsuranceRate" value="0.25" step="0.01"> <span class="unit-display">%</span>
+            <input type="range" id="homeInsuranceRateSlider" min="0" max="2" step="0.05" value="0.25">
+            <span id="homeInsuranceRateSliderValueOutput">0.25%</span>
         </div>
         <div>
             <label for="monthlyMaintenance">Maintenance (Monthly):</label>
-            <input type="number" id="monthlyMaintenance" placeholder="e.g., 500">
+            <input type="number" id="monthlyMaintenance" value="300" step="50"> <span class="unit-display">$/month</span>
         </div>
         <div>
             <label for="spyReturn">S&P 500 Annual Return %:</label>
-            <input type="number" id="spyReturn" placeholder="e.g., 8">
+            <input type="number" id="spyReturn" value="8" step="0.1"> <span class="unit-display">%</span>
+            <input type="range" id="spyReturnSlider" min="0" max="20" step="0.5" value="8">
+            <span id="spyReturnSliderValueOutput">8%</span>
         </div>
         <div>
             <label for="homeAppreciation">Annual Home Appreciation %:</label>
-            <input type="number" id="homeAppreciation" placeholder="e.g., 3">
+            <input type="number" id="homeAppreciation" value="4" step="0.1"> <span class="unit-display">%</span>
+            <input type="range" id="homeAppreciationSlider" min="-5" max="15" step="0.5" value="4">
+            <span id="homeAppreciationSliderValueOutput">4%</span>
         </div>
         <div>
             <label for="downPaymentPercent">Down Payment %:</label>
-            <input type="number" id="downPaymentPercent" placeholder="e.g., 30">
+            <input type="number" id="downPaymentPercent" value="20" step="0.1"> <span class="unit-display">%</span>
+            <input type="range" id="downPaymentPercentSlider" min="0" max="100" step="1" value="20">
+            <span id="downPaymentPercentSliderValueOutput">20%</span>
         </div>
         <div>
             <label for="buyingClosingCostsPercent">Buying Closing Costs %:</label>
-            <input type="number" id="buyingClosingCostsPercent" placeholder="e.g., 2">
+            <input type="number" id="buyingClosingCostsPercent" value="2" step="0.1"> <span class="unit-display">%</span>
+            <input type="range" id="buyingClosingCostsPercentSlider" min="0" max="10" step="0.5" value="2">
+            <span id="buyingClosingCostsPercentSliderValueOutput">2%</span>
         </div>
         <div>
             <label for="currentSavings">Current Savings:</label>
-            <input type="number" id="currentSavings" placeholder="e.g., 800000">
+            <input type="number" id="currentSavings" value="150000" step="1000"> <span class="unit-display">$</span>
         </div>
         <button type="button" id="calculateButton">Calculate</button>
     </form>
+    <div id="input-summary-container"></div>
     <div id="results-container">
         <!-- Results will be displayed here -->
     </div>

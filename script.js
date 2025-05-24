@@ -245,6 +245,133 @@ function formatCurrency(amount) {
     return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
+
+/**
+ * Displays a summary of the user's inputs and key derived values.
+ * @param {object} inputs - The processed input values from getInputs().
+ */
+function displayInputSummary(inputs) {
+    const summaryContainer = document.getElementById('input-summary-container');
+    summaryContainer.innerHTML = ''; // Clear previous summary
+
+    // --- 1. Calculate Derived Values ---
+    const {
+        homePrice,
+        downPaymentPercentDecimal,
+        interestRateDecimal, // This is already a decimal from getInputs
+        buyingClosingCostsPercentDecimal,
+        currentSavings,
+        propertyTaxRateDecimal,
+        homeInsuranceRateDecimal,
+        monthlyMaintenance,
+        monthlyRent,
+        netMonthlyPay,
+        additionalBonus,
+        monthlyExpenses
+    } = inputs;
+
+    const downPaymentAmount = homePrice * downPaymentPercentDecimal;
+    const closingCostsAmount = homePrice * buyingClosingCostsPercentDecimal;
+    const totalUpfrontCosts = downPaymentAmount + closingCostsAmount;
+    const loanAmount = homePrice - downPaymentAmount;
+    const savingsAfterUpfrontCosts = currentSavings - totalUpfrontCosts;
+
+    const monthlyInterestRate = interestRateDecimal / 12;
+    const numberOfPayments = 30 * 12; // Assuming 30 years
+    let monthlyMortgagePayment = 0;
+    if (loanAmount <= 0) {
+        monthlyMortgagePayment = 0;
+    } else if (monthlyInterestRate > 0) {
+        monthlyMortgagePayment = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+    } else { // No interest, loanAmount > 0
+        monthlyMortgagePayment = loanAmount / numberOfPayments;
+    }
+
+    const monthlyPropertyTax = (homePrice * propertyTaxRateDecimal) / 12;
+    const monthlyHomeInsurance = (homePrice * homeInsuranceRateDecimal) / 12;
+    const totalMonthlyHousingCostsBuy = monthlyMortgagePayment + monthlyPropertyTax + monthlyHomeInsurance + monthlyMaintenance;
+
+    const netMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
+    const savingsSurplusRenting = netMonthlyIncome - monthlyExpenses - monthlyRent;
+    const savingsSurplusBuying = netMonthlyIncome - monthlyExpenses - totalMonthlyHousingCostsBuy;
+
+    // --- 2. Create Table Structure ---
+    const table = document.createElement('table');
+    const tbody = table.createTBody();
+
+    // Helper function to add section headers
+    function addSectionHeader(tbody, title) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 2;
+        cell.textContent = title;
+        // Styling will be handled by CSS for #input-summary-container th, but we can add a class or specific style if needed
+        // For now, using existing CSS which has a th style. If we want to make it look like a th:
+        cell.style.fontWeight = 'bold';
+        cell.style.backgroundColor = '#f0f0f0'; // Match CSS for th in input summary
+        cell.style.padding = '8px 10px'; // Match CSS
+        cell.style.textAlign = 'left'; // Match CSS
+    }
+
+    // Helper function to add rows
+    function addSummaryRow(tbody, label, value, formatType = 'currency') {
+        const row = tbody.insertRow();
+        const cellLabel = row.insertCell();
+        cellLabel.textContent = label;
+        const cellValue = row.insertCell();
+
+        if (value === undefined || value === null || (typeof value === 'number' && isNaN(value))) {
+            cellValue.textContent = 'N/A';
+        } else if (formatType === 'currency') {
+            cellValue.textContent = formatCurrency(value);
+        } else if (formatType === 'percent') {
+            // value is expected to be already scaled (e.g., 20 for 20%)
+            let digits = 0;
+            if (value < 0.001 && value !== 0) digits = 4; // For very small rates if needed
+            else if (value < 10 && value !== Math.floor(value)) digits = 2;
+            else if (value < 1 && value !== 0) digits = 2;
+            cellValue.textContent = value.toFixed(digits) + '%';
+        } else { // 'number'
+            cellValue.textContent = typeof value === 'number' ? value.toLocaleString() : value;
+        }
+    }
+
+    // --- 3. Populate Table ---
+    addSectionHeader(tbody, 'Key Inputs');
+    addSummaryRow(tbody, 'Home Price:', homePrice, 'currency');
+    addSummaryRow(tbody, 'Down Payment Percent:', downPaymentPercentDecimal * 100, 'percent');
+    addSummaryRow(tbody, 'Interest Rate (Annual):', interestRateDecimal * 100, 'percent');
+    addSummaryRow(tbody, 'Current Savings:', currentSavings, 'currency');
+
+
+    addSectionHeader(tbody, 'Upfront Costs (Buying)');
+    addSummaryRow(tbody, 'Down Payment Amount:', downPaymentAmount, 'currency');
+    addSummaryRow(tbody, 'Closing Costs:', closingCostsAmount, 'currency');
+    addSummaryRow(tbody, 'Total Upfront Costs:', totalUpfrontCosts, 'currency');
+    addSummaryRow(tbody, 'Loan Amount:', loanAmount, 'currency');
+    addSummaryRow(tbody, 'Savings After Upfront Costs:', savingsAfterUpfrontCosts, 'currency');
+
+    addSectionHeader(tbody, 'Estimated Monthly Costs (Buy - Initial)');
+    addSummaryRow(tbody, 'Mortgage Principal & Interest:', monthlyMortgagePayment, 'currency');
+    addSummaryRow(tbody, 'Property Tax:', monthlyPropertyTax, 'currency');
+    addSummaryRow(tbody, 'Home Insurance:', monthlyHomeInsurance, 'currency');
+    addSummaryRow(tbody, 'Maintenance:', monthlyMaintenance, 'currency');
+    addSummaryRow(tbody, 'Total Monthly Housing Costs (Buy):', totalMonthlyHousingCostsBuy, 'currency');
+
+    addSectionHeader(tbody, 'Estimated Monthly Costs (Rent - Initial)');
+    addSummaryRow(tbody, 'Monthly Rent:', monthlyRent, 'currency');
+
+    addSectionHeader(tbody, 'Estimated Monthly Cash Flow (Initial)');
+    addSummaryRow(tbody, 'Net Monthly Income:', netMonthlyIncome, 'currency');
+    addSummaryRow(tbody, 'Monthly Non-Housing Expenses:', monthlyExpenses, 'currency');
+    addSummaryRow(tbody, 'Savings Surplus (Renting):', savingsSurplusRenting, 'currency');
+    addSummaryRow(tbody, 'Savings Surplus (Buying):', savingsSurplusBuying, 'currency');
+
+    // --- 4. Append Table to Container ---
+    summaryContainer.appendChild(table);
+}
+
+
 /**
  * Displays the calculation results in a table and a summary.
  * @param {Array<object>} rentData - Array of yearly data from calculateRentingScenario.
@@ -346,12 +473,61 @@ function displayResults(rentData, buyData) {
 document.addEventListener('DOMContentLoaded', () => {
     const calculateButton = document.getElementById('calculateButton');
 
+    // Helper function to synchronize number input, range slider, and output span
+    function setupInputSync(numberInputId, sliderId, outputId, unit = '%') {
+        const numberInput = document.getElementById(numberInputId);
+        const slider = document.getElementById(sliderId);
+        const output = document.getElementById(outputId);
+
+        if (!numberInput || !slider || !output) {
+            console.warn(`Skipping sync setup for: ${numberInputId}, ${sliderId}, ${outputId}. One or more elements not found.`);
+            return;
+        }
+
+        // Initial display update from number input's default value
+        output.textContent = numberInput.value + unit;
+        // Ensure slider also matches the number input's default value initially
+        slider.value = numberInput.value;
+
+
+        numberInput.addEventListener('input', () => {
+            // Check to prevent potential feedback loops or unnecessary updates
+            if (slider.value !== numberInput.value) {
+                slider.value = numberInput.value;
+            }
+            // Ensure output reflects the potentially constrained value of the number input
+            // (e.g., if user types something out of slider's range, slider will clip it)
+            // For a robust solution, one might re-set numberInput.value = slider.value here if clipping is desired.
+            // For now, assume direct update is fine.
+            output.textContent = numberInput.value + unit;
+        });
+
+        slider.addEventListener('input', () => {
+            if (numberInput.value !== slider.value) {
+                numberInput.value = slider.value;
+            }
+            output.textContent = slider.value + unit;
+        });
+    }
+
+    // Setup synchronization for all relevant inputs
+    setupInputSync('annualRentIncrease', 'annualRentIncreaseSlider', 'annualRentIncreaseSliderValueOutput');
+    setupInputSync('interestRate', 'interestRateSlider', 'interestRateSliderValueOutput');
+    setupInputSync('propertyTaxRate', 'propertyTaxRateSlider', 'propertyTaxRateSliderValueOutput');
+    setupInputSync('homeInsuranceRate', 'homeInsuranceRateSlider', 'homeInsuranceRateSliderValueOutput');
+    setupInputSync('spyReturn', 'spyReturnSlider', 'spyReturnSliderValueOutput');
+    setupInputSync('homeAppreciation', 'homeAppreciationSlider', 'homeAppreciationSliderValueOutput');
+    setupInputSync('downPaymentPercent', 'downPaymentPercentSlider', 'downPaymentPercentSliderValueOutput');
+    setupInputSync('buyingClosingCostsPercent', 'buyingClosingCostsPercentSlider', 'buyingClosingCostsPercentSliderValueOutput');
+
+
     if (calculateButton) {
         calculateButton.addEventListener('click', () => {
             console.log("Calculate button clicked.");
             const userInputs = getInputs();
-            const rentData = calculateRentingScenario(userInputs); // Updated variable name
-            const buyData = calculateBuyingScenario(userInputs); // Still using stub
+            displayInputSummary(userInputs); // Call the new summary function
+            const rentData = calculateRentingScenario(userInputs);
+            const buyData = calculateBuyingScenario(userInputs);
             displayResults(rentData, buyData);
         });
     } else {

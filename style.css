@@ -23,25 +23,56 @@ h1 {
 }
 
 /* Form Input and Label Styling */
-#calculatorForm div { /* Targeting the divs wrapping label and input for spacing */
-    margin-bottom: 15px;
+#calculatorForm > div { /* Direct children divs of the form */
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping if screen is too narrow */
+    align-items: center; /* Vertically align items */
+    margin-bottom: 15px; /* Existing margin */
 }
 
 label {
-    display: block;
-    margin-bottom: 5px; /* Space between label and input */
+    flex-basis: 100%; /* Label takes full width, effectively on its own line */
+    margin-bottom: 5px; /* Space between label and input group */
     font-weight: bold;
     color: #555;
 }
 
 input[type="number"] {
-    width: 100%;
+    /* width: 100%; */ /* Overridden by flex properties */
+    flex-grow: 1;
+    max-width: 180px; /* Fixed width for number input part */
     padding: 10px;
-    margin-top: 4px; /* Small space if label is block and input is next line conceptually */
+    /* margin-top: 4px; */ /* No longer needed due to flex alignment */
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Important for 100% width to include padding and border */
+    box-sizing: border-box;
 }
+
+.unit-display {
+    margin-left: 5px;
+    margin-right: 10px; /* Space before slider if present */
+    color: #555;
+    font-size: 0.9em;
+}
+
+input[type="range"] {
+    flex-grow: 2; /* Slider takes more space */
+    min-width: 100px; /* Prevent slider from becoming too small */
+    height: 10px; /* Visual adjustment for slider height */
+    margin-left: 10px;
+    margin-right: 10px;
+    accent-color: #007bff; /* Match button color */
+}
+
+/* Span for slider value output */
+#calculatorForm > div > span[id$="SliderValueOutput"] { /* Selects spans whose id ends with SliderValueOutput */
+    min-width: 45px; /* Give it some space */
+    text-align: right;
+    font-size: 0.9em;
+    color: #333;
+    font-weight: bold;
+}
+
 
 /* Button Styling */
 #calculateButton {
@@ -103,4 +134,46 @@ input[type="number"] {
     font-size: 1.1em;
     font-weight: bold;
     text-align: center;
+}
+
+/* Input Summary Table Styling */
+#input-summary-container {
+    margin-bottom: 30px; /* Space before main results table */
+}
+
+#input-summary-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff; /* Similar to other containers */
+    padding: 15px; /* Padding inside the container if table is not full width of it */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+#input-summary-container th, 
+#input-summary-container td {
+    border: 1px solid #e0e0e0; /* Slightly lighter border */
+    padding: 8px 10px;
+    text-align: left;
+}
+
+#input-summary-container th {
+    background-color: #f0f0f0; /* Lighter header than results table */
+    font-weight: bold;
+    color: #444;
+}
+
+/* For two-column layout in summary table where first td is like a header */
+#input-summary-container td:first-child {
+    font-weight: normal; 
+    background-color: #fdfdfd;
+    width: 40%; /* Give more space to description */
+    color: #333;
+}
+
+#input-summary-container td:last-child {
+    text-align: right; /* Numerical values right-aligned */
+    font-weight: bold;
+    color: #0056b3; /* Match button hover color for emphasis */
 }
