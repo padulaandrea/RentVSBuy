@@ -177,3 +177,52 @@ input[type="range"] {
     font-weight: bold;
     color: #0056b3; /* Match button hover color for emphasis */
 }
+
+/* Unrecoverable Costs Table Styling */
+#unrecoverable-costs-container {
+    margin-top: 30px; /* Space above this section */
+}
+#unrecoverable-costs-container h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333; /* Match other h1/h2 if any */
+}
+#unrecoverable-costs-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px; /* Space between H2 and table */
+    background-color: #fff; /* Match other table containers */
+    border-radius: 8px; /* Match other table containers */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05); /* Match other table containers */
+}
+#unrecoverable-costs-container th,
+#unrecoverable-costs-container td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    text-align: left;
+}
+#unrecoverable-costs-container th {
+    background-color: #e9e9e9; /* Match other table headers */
+}
+/* Right-align numerical data */
+#unrecoverable-costs-container td:nth-child(2),
+#unrecoverable-costs-container th:nth-child(2),
+#unrecoverable-costs-container td:nth-child(3),
+#unrecoverable-costs-container th:nth-child(3) {
+    text-align: right;
+}
+
+/* Chart Styling */
+.chart-container {
+    width: 100%;
+    max-width: 700px; /* Or your preferred max width */
+    margin: 30px auto; /* Center the chart and add space */
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fff; /* Optional background for the chart area */
+}
+
+canvas {
+    max-width: 100%; /* Ensure canvas scales down */
+}
