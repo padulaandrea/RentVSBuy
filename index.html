@@ -94,15 +94,36 @@
         </div>
         <button type="button" id="calculateButton">Calculate</button>
     </form>
-    <div id="input-summary-container"></div>
-    <div id="results-container">
-        <!-- Results will be displayed here -->
-        <div class="chart-container" style="margin-bottom: 30px;"><canvas id="netWorthChart"></canvas></div>
+
+    <div class="tabs-navigation">
+        <button id="tabButtonComparison" class="tab-button active">Comparison View</button>
+        <button id="tabButtonDetailed" class="tab-button">Detailed Yearly Data</button>
     </div>
-    <div id="unrecoverable-costs-container">
-        <h2>Unrecoverable Costs Over Time</h2>
-        <!-- Table will be inserted here by JS -->
-        <div class="chart-container"><canvas id="unrecoverableCostsChart"></canvas></div>
+
+    <div id="tabbed-content-area">
+        <div id="comparison-view-tab-content" class="tab-content active-tab-content">
+            <div id="input-summary-container"></div>
+            <div id="results-container">
+                <!-- Results will be displayed here -->
+                <div class="chart-container" style="margin-bottom: 30px;"><canvas id="netWorthChart"></canvas></div>
+            </div>
+            <div id="unrecoverable-costs-container">
+                <h2>Unrecoverable Costs Over Time</h2>
+                <!-- Table will be inserted here by JS -->
+                <div class="chart-container"><canvas id="unrecoverableCostsChart"></canvas></div>
+            </div>
+        </div>
+
+        <div id="detailed-view-tab-content" class="tab-content">
+            <h2>Detailed Renting Data</h2>
+            <div id="detailed-rent-table-container">
+                <!-- Detailed renting table will be inserted here by JS -->
+            </div>
+            <h2>Detailed Buying Data</h2>
+            <div id="detailed-buy-table-container">
+                <!-- Detailed buying table will be inserted here by JS -->
+            </div>
+        </div>
     </div>
     <script src="script.js" defer></script>
 </body>

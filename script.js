@@ -56,43 +56,59 @@ function calculateRentingScenario(inputs) {
     const yearsToSimulate = 30;
     const rentResults = [];
 
+    const yearsToSimulate = 30;
+    const rentResults = [];
+
     let currentAnnualRent = inputs.monthlyRent * 12;
     let investedAssets = inputs.currentSavings;
-    let totalRentPaid = 0; // Initialize totalRentPaid
+    let totalRentPaid = 0;
+    let currentMonthlyExpenses = inputs.monthlyExpenses; // Initialize currentMonthlyExpenses
 
-    // Extracting necessary inputs for clarity within the loop
+    // Extracting necessary inputs for clarity
     const {
         annualRentIncreaseDecimal,
         netMonthlyPay,
         additionalBonus,
-        monthlyExpenses,
         spyReturnDecimal
     } = inputs;
 
     for (let year = 1; year <= yearsToSimulate; year++) {
+        const beginningInvestedSavings = investedAssets; // Store beginning of year savings
+
         if (year > 1) {
             currentAnnualRent *= (1 + annualRentIncreaseDecimal);
+            currentMonthlyExpenses *= 1.03; // Apply 3% inflation to monthly expenses
         }
 
-        const annualNetIncome = (netMonthlyPay * 12) + additionalBonus;
-        // Assuming monthlyExpenses in inputs is purely for living, not including rent
-        const annualLivingExpenses = monthlyExpenses * 12;
+        const monthlyRentForYear = currentAnnualRent / 12;
+        const calculatedNetMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
+        
+        const annualLivingExpenses = currentMonthlyExpenses * 12;
+        
+        // This is the cash flow available for investment from this year's income
+        const monthlyInvestedFromIncome = calculatedNetMonthlyIncome - monthlyRentForYear - currentMonthlyExpenses;
+        const annualInvestedFromIncome = monthlyInvestedFromIncome * 12;
 
-        // Savings this year is income minus rent minus other living expenses
-        const savingsThisYear = annualNetIncome - currentAnnualRent - annualLivingExpenses;
-
-        // Add savings to invested assets first
-        investedAssets += savingsThisYear;
-        // Then apply S&P return to the new total
+        // Add this year's savings from income to invested assets
+        investedAssets += annualInvestedFromIncome;
+        // Then apply S&P return to the new total (including this year's savings)
         investedAssets *= (1 + spyReturnDecimal);
-        totalRentPaid += currentAnnualRent; // Accumulate rent paid
+        
+        totalRentPaid += currentAnnualRent;
 
         rentResults.push({
             year: year,
-            rentPaidThisYear: currentAnnualRent,
+            monthlyRent: monthlyRentForYear,
+            annualRent: currentAnnualRent,
+            cumulativeRentPaid: totalRentPaid, // This is totalUnrecoverableCost for renting
+            // netMonthlyPay: netMonthlyPay, // Echoing input, might not be needed if calculatedNetMonthlyIncome is present
+            currentMonthlyExpenses: currentMonthlyExpenses,
+            monthlyInvestedFromIncome: monthlyInvestedFromIncome,
+            annualInvestedFromIncome: annualInvestedFromIncome,
+            beginningInvestedSavings: beginningInvestedSavings,
             netWorth: investedAssets,
-            savingsForYear: savingsThisYear, // For detailed analysis
-            totalUnrecoverableCost: totalRentPaid // Add total unrecoverable cost
+            calculatedNetMonthlyIncome: calculatedNetMonthlyIncome,
+            totalUnrecoverableCost: totalRentPaid // Explicitly using the same value for consistency
         });
     }
 
@@ -109,7 +125,10 @@ function calculateBuyingScenario(inputs) {
     console.log("calculateBuyingScenario received inputs:", inputs);
     const yearsToSimulate = 30;
     const buyResults = [];
-    let totalUnrecoverableBuyCosts = 0; // Initialize totalUnrecoverableBuyCosts
+    let totalUnrecoverableBuyCosts = 0; 
+    let currentMonthlyExpenses = inputs.monthlyExpenses;
+    let currentMonthlyPropertyTax = (inputs.homePrice * inputs.propertyTaxRateDecimal) / 12;
+    let cumulativeOutlay = 0;
 
     const {
         homePrice,
@@ -162,9 +181,18 @@ function calculateBuyingScenario(inputs) {
     }
 
     for (let year = 1; year <= yearsToSimulate; year++) {
+        const beginningInvestedSavings = investedAssets; // Store at start of year
         let interestPaidThisYear = 0;
         let principalPaidThisYear = 0;
-        const annualMortgagePayments = monthlyMortgagePayment * 12; // Total P+I for the year if loan active
+        
+        if (year > 1) {
+            currentMonthlyExpenses *= 1.03;
+            currentMonthlyPropertyTax *= 1.02;
+        }
+
+        // Mortgage P&I calculation (remains the same as it's based on fixed loan terms)
+        const annualMortgagePaymentsFixed = monthlyMortgagePayment * 12; 
+        let actualAnnualMortgagePaidThisYear = 0;
 
         if (remainingLoanBalance > 0) {
             for (let month = 0; month < 12; month++) {
@@ -199,48 +227,60 @@ function calculateBuyingScenario(inputs) {
         }
         
         // If loanAmount was 0 initially, all mortgage related payments are 0
-        const actualAnnualMortgagePaid = (loanAmount > 0) ? (interestPaidThisYear + principalPaidThisYear) : 0;
-
-
-        const propertyTaxPaidThisYear = currentHomeValue * propertyTaxRateDecimal;
-        const homeInsurancePaidThisYear = currentHomeValue * homeInsuranceRateDecimal; // Assuming rate is % of current home value
-        const maintenancePaidThisYear = monthlyMaintenance * 12;
+        actualAnnualMortgagePaidThisYear = (loanAmount > 0) ? (interestPaidThisYear + principalPaidThisYear) : 0;
         
-        // totalHousingCostsThisYear based on actual mortgage payments made + other costs
-        const totalHousingCostsThisYear = actualAnnualMortgagePaid + propertyTaxPaidThisYear + homeInsurancePaidThisYear + maintenancePaidThisYear;
+        // Yearly costs based on potentially updated values
+        const annualPropertyTaxThisYear = currentMonthlyPropertyTax * 12;
+        const monthlyHomeInsurance = (currentHomeValue * inputs.homeInsuranceRateDecimal) / 12;
+        const annualHomeInsuranceThisYear = monthlyHomeInsurance * 12;
+        const annualMaintenanceThisYear = inputs.monthlyMaintenance * 12; // Constant based on input
 
-        // Include ADU income in annual net income for buying scenario
-        const annualNetIncome = (netMonthlyPay * 12) + additionalBonus + (aduMonthlyIncome * 12);
-        const annualLivingExpenses = monthlyExpenses * 12; // General living expenses
-        const savingsThisYear = annualNetIncome - totalHousingCostsThisYear - annualLivingExpenses;
+        const totalAnnualHousingCosts = actualAnnualMortgagePaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
+        
+        const netMonthlyPayForCalc = netMonthlyPay + (additionalBonus / 12) + aduMonthlyIncome;
+        const annualNetIncomeInclADU = netMonthlyPayForCalc * 12;
+        const annualLivingExpenses = currentMonthlyExpenses * 12;
+        
+        const annualInvestedFromIncome = annualNetIncomeInclADU - totalAnnualHousingCosts - annualLivingExpenses;
 
-        investedAssets += savingsThisYear;
+        investedAssets += annualInvestedFromIncome;
         investedAssets *= (1 + spyReturnDecimal);
 
-        if (year > 1 || homeAppreciationDecimal !== 0) { // No appreciation in year 1 if homeAppreciationDecimal is 0, but apply if not. More realistically, appreciation happens from day 1.
+        if (year > 1 || homeAppreciationDecimal !== 0) { 
              currentHomeValue *= (1 + homeAppreciationDecimal);
         }
 
+        const homeEquityNetOfSaleCost = (currentHomeValue * 0.94) - (remainingLoanBalance > 0 ? remainingLoanBalance : 0);
+        const netWorth = homeEquityNetOfSaleCost + investedAssets;
 
-        // Factor in 6% selling cost for home equity calculation
-        const homeEquity = (currentHomeValue * 0.94) - (remainingLoanBalance > 0 ? remainingLoanBalance : 0);
-        const netWorth = homeEquity + investedAssets;
+        const unrecoverableCostsThisYear = interestPaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
+        totalUnrecoverableBuyCosts += unrecoverableCostsThisYear;
+        
+        const totalMonthlyOutlay = actualAnnualMortgagePaidThisYear/12 + currentMonthlyPropertyTax + monthlyHomeInsurance + inputs.monthlyMaintenance;
+        cumulativeOutlay += totalAnnualHousingCosts;
 
-        const unrecoverableThisYear = interestPaidThisYear + propertyTaxPaidThisYear + homeInsurancePaidThisYear + maintenancePaidThisYear;
-        totalUnrecoverableBuyCosts += unrecoverableThisYear;
 
         buyResults.push({
             year: year,
+            mortgageBalance: (remainingLoanBalance > 0 ? remainingLoanBalance : 0),
+            principalPaidAnnual: principalPaidThisYear,
+            interestPaidAnnual: interestPaidThisYear,
+            monthlyPI: monthlyMortgagePayment, // Fixed monthly P&I
+            currentMonthlyPropertyTax: currentMonthlyPropertyTax,
+            monthlyHomeInsurance: monthlyHomeInsurance,
+            monthlyMaintenance: inputs.monthlyMaintenance,
+            totalMonthlyOutlay: totalMonthlyOutlay,
+            annualTotalOutlay: totalAnnualHousingCosts, // Use the consistent totalAnnualHousingCosts
+            cumulativeOutlay: cumulativeOutlay,
+            currentMonthlyExpenses: currentMonthlyExpenses,
+            netMonthlyPayInclADU: netMonthlyPayForCalc,
+            monthlyInvestedFromIncome: annualInvestedFromIncome / 12, // Derive from annual
+            annualInvestedFromIncome: annualInvestedFromIncome,
+            beginningInvestedSavings: beginningInvestedSavings,
             homeValue: currentHomeValue,
-            equity: homeEquity,
-            remainingLoan: remainingLoanBalance > 0 ? remainingLoanBalance : 0,
-            investedAssets: investedAssets,
-            netWorth: netWorth,
-            interestPaid: interestPaidThisYear,
-            principalPaid: principalPaidThisYear,
-            annualHousingCost: totalHousingCostsThisYear, // For more detailed analysis later
-            savingsForYear: savingsThisYear,
-            totalUnrecoverableCost: totalUnrecoverableBuyCosts // Add total unrecoverable cost
+            homeEquityNetProfitFromSale: homeEquityNetOfSaleCost,
+            totalUnrecoverableCost: totalUnrecoverableBuyCosts,
+            netWorth: netWorth
         });
     }
 
@@ -536,6 +576,115 @@ function displayUnrecoverableCosts(rentData, buyData) {
 }
 
 /**
+ * Displays a detailed table of the buying scenario's yearly data.
+ * @param {Array<object>} buyData - Array of yearly data from calculateBuyingScenario.
+ */
+function displayDetailedBuyTable(buyData) {
+    const container = document.getElementById('detailed-buy-table-container');
+    container.innerHTML = ''; // Clear previous table
+
+    if (!buyData || buyData.length === 0) {
+        container.textContent = 'No detailed buying data to display.';
+        return;
+    }
+
+    const table = document.createElement('table');
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    
+    const headers = [
+        'Year', 'Mortgage Balance', 'Principal Paid (Annual)', 'Interest Paid (Annual)', 'Monthly P&I',
+        'Monthly Property Tax (YoY 2% inc.)', 'Monthly Home Insurance', 'Monthly Maintenance',
+        'Total Monthly Outlay', 'Annual Total Outlay', 'Cumulative Outlay',
+        'Monthly Expenses (YoY 3% inc.)', 'Net Monthly Pay (incl. ADU)',
+        'Monthly Invested (from income)', 'Annual Invested (from income)',
+        'Beginning Invested Savings', 'Home Value', 'Home Equity / Net Profit from Sale',
+        'Lost Cost (Cumulative)', 'End of Year Net Worth'
+    ];
+
+    headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+
+    const tbody = table.createTBody();
+    buyData.forEach(dataYear => {
+        const row = tbody.insertRow();
+        row.insertCell().textContent = dataYear.year;
+        row.insertCell().textContent = formatCurrency(dataYear.mortgageBalance);
+        row.insertCell().textContent = formatCurrency(dataYear.principalPaidAnnual);
+        row.insertCell().textContent = formatCurrency(dataYear.interestPaidAnnual);
+        row.insertCell().textContent = formatCurrency(dataYear.monthlyPI);
+        row.insertCell().textContent = formatCurrency(dataYear.currentMonthlyPropertyTax);
+        row.insertCell().textContent = formatCurrency(dataYear.monthlyHomeInsurance);
+        row.insertCell().textContent = formatCurrency(dataYear.monthlyMaintenance);
+        row.insertCell().textContent = formatCurrency(dataYear.totalMonthlyOutlay);
+        row.insertCell().textContent = formatCurrency(dataYear.annualTotalOutlay);
+        row.insertCell().textContent = formatCurrency(dataYear.cumulativeOutlay);
+        row.insertCell().textContent = formatCurrency(dataYear.currentMonthlyExpenses);
+        row.insertCell().textContent = formatCurrency(dataYear.netMonthlyPayInclADU);
+        row.insertCell().textContent = formatCurrency(dataYear.monthlyInvestedFromIncome);
+        row.insertCell().textContent = formatCurrency(dataYear.annualInvestedFromIncome);
+        row.insertCell().textContent = formatCurrency(dataYear.beginningInvestedSavings);
+        row.insertCell().textContent = formatCurrency(dataYear.homeValue);
+        row.insertCell().textContent = formatCurrency(dataYear.homeEquityNetProfitFromSale);
+        row.insertCell().textContent = formatCurrency(dataYear.totalUnrecoverableCost); // Matches 'Lost Cost (Cumulative)'
+        row.insertCell().textContent = formatCurrency(dataYear.netWorth);
+    });
+
+    container.appendChild(table);
+}
+
+/**
+ * Displays a detailed table of the renting scenario's yearly data.
+ * @param {Array<object>} rentData - Array of yearly data from calculateRentingScenario.
+ */
+function displayDetailedRentTable(rentData) {
+    const container = document.getElementById('detailed-rent-table-container');
+    container.innerHTML = ''; // Clear previous table
+
+    if (!rentData || rentData.length === 0) {
+        container.textContent = 'No detailed renting data to display.';
+        return;
+    }
+
+    const table = document.createElement('table');
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    
+    const headers = [
+        'Year', 'Monthly Rent', 'Annual Rent', 'Cumulative Rent Paid', 
+        'Calculated Net Monthly Income', 'Monthly Expenses (YoY 3% inc.)', 
+        'Monthly Invested (from income)', 'Annual Invested (from income)', 
+        'Beginning Invested Savings', 'End of Year Net Worth'
+    ];
+
+    headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+
+    const tbody = table.createTBody();
+    rentData.forEach(dataYear => {
+        const row = tbody.insertRow();
+        row.insertCell().textContent = dataYear.year;
+        row.insertCell().textContent = formatCurrency(dataYear.monthlyRent);
+        row.insertCell().textContent = formatCurrency(dataYear.annualRent);
+        row.insertCell().textContent = formatCurrency(dataYear.cumulativeRentPaid); // Matches totalUnrecoverableCost
+        row.insertCell().textContent = formatCurrency(dataYear.calculatedNetMonthlyIncome);
+        row.insertCell().textContent = formatCurrency(dataYear.currentMonthlyExpenses);
+        row.insertCell().textContent = formatCurrency(dataYear.monthlyInvestedFromIncome);
+        row.insertCell().textContent = formatCurrency(dataYear.annualInvestedFromIncome);
+        row.insertCell().textContent = formatCurrency(dataYear.beginningInvestedSavings);
+        row.insertCell().textContent = formatCurrency(dataYear.netWorth);
+    });
+
+    container.appendChild(table);
+}
+
+/**
  * Displays charts for Net Worth and Unrecoverable Costs.
  * @param {Array<object>} rentData - Array of yearly data from calculateRentingScenario.
  * @param {Array<object>} buyData - Array of yearly data from calculateBuyingScenario.
@@ -690,6 +839,29 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInputSync('buyingClosingCostsPercent', 'buyingClosingCostsPercentSlider', 'buyingClosingCostsPercentSliderValueOutput');
     setupInputSync('aduMonthlyIncome', 'aduMonthlyIncomeSlider', 'aduMonthlyIncomeSliderValueOutput', '$'); // Sync for ADU
 
+    // Tab Control Logic
+    const tabButtonComparison = document.getElementById('tabButtonComparison');
+    const tabButtonDetailed = document.getElementById('tabButtonDetailed');
+    const comparisonViewTabContent = document.getElementById('comparison-view-tab-content');
+    const detailedViewTabContent = document.getElementById('detailed-view-tab-content');
+
+    if (tabButtonComparison && tabButtonDetailed && comparisonViewTabContent && detailedViewTabContent) {
+        tabButtonComparison.addEventListener('click', () => {
+            tabButtonComparison.classList.add('active');
+            tabButtonDetailed.classList.remove('active');
+            comparisonViewTabContent.classList.add('active-tab-content');
+            detailedViewTabContent.classList.remove('active-tab-content');
+        });
+
+        tabButtonDetailed.addEventListener('click', () => {
+            tabButtonDetailed.classList.add('active');
+            tabButtonComparison.classList.remove('active');
+            detailedViewTabContent.classList.add('active-tab-content');
+            comparisonViewTabContent.classList.remove('active-tab-content');
+        });
+    } else {
+        console.warn("Tab control elements not found. Tab functionality will be affected.");
+    }
 
     if (calculateButton) {
         calculateButton.addEventListener('click', () => {
@@ -701,6 +873,8 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(rentData, buyData);
             displayUnrecoverableCosts(rentData, buyData); 
             displayCharts(rentData, buyData); // Call the new chart function
+            displayDetailedRentTable(rentData); // Added for detailed rent table
+            displayDetailedBuyTable(buyData);   // Added for detailed buy table
         });
     } else {
         console.error("Calculate button not found!");
