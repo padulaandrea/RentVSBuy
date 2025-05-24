@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rent vs. Buy Calculator</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Rent vs. Buy Calculator</h1>
@@ -95,15 +94,17 @@
         <button type="button" id="calculateButton">Calculate</button>
     </form>
     <div id="input-summary-container"></div>
+    <!-- Results will be displayed here -->
+    <div class="chart-container" style="margin-bottom: 30px;"><canvas id="netWorthChart"></canvas></div>
     <div id="results-container">
-        <!-- Results will be displayed here -->
-        <div class="chart-container" style="margin-bottom: 30px;"><canvas id="netWorthChart"></canvas></div>
     </div>
+
     <div id="unrecoverable-costs-container">
         <h2>Unrecoverable Costs Over Time</h2>
         <!-- Table will be inserted here by JS -->
         <div class="chart-container"><canvas id="unrecoverableCostsChart"></canvas></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js" defer></script>
 </body>
 </html>
