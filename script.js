@@ -555,13 +555,13 @@ function displayUnrecoverableCosts(rentData, buyData) {
     const table = document.createElement('table');
     const thead = table.createTHead();
     const headerRow = thead.insertRow();
-    const headers = ['Year', 'Total Unrecoverable (Rent)', 'Total Unrecoverable (Buy)'];
+    const headers = ['Year', 'Total Unrecoverable (Rent)', 'Total Unrecoverable (Buy)', 'Better Option'];
     headers.forEach(text => {
         const th = document.createElement('th');
         th.textContent = text;
         headerRow.appendChild(th);
     });
-
+    let firstTimeBuyIsBetter = true; // To capture the first break-even year
     const tbody = table.createTBody();
     for (let i = 0; i < rentData.length; i++) {
         // Check if corresponding buyData exists for safety, though they should have same length
@@ -575,6 +575,21 @@ function displayUnrecoverableCosts(rentData, buyData) {
         // Ensure totalUnrecoverableCost property exists before formatting
         row.insertCell().textContent = yearRent.totalUnrecoverableCost !== undefined ? formatCurrency(yearRent.totalUnrecoverableCost) : 'N/A';
         row.insertCell().textContent = yearBuy.totalUnrecoverableCost !== undefined ? formatCurrency(yearBuy.totalUnrecoverableCost) : 'N/A';
+        // Better Option cell
+        cell = row.insertCell();
+        const isBuyBetter = yearBuy.totalUnrecoverableCost > yearRent.totalUnrecoverableCost;
+        const betterOption = isBuyBetter ? 'Buy' : 'Rent';
+        cell.textContent = betterOption;
+
+        if (isBuyBetter) {
+            cell.style.color = 'green';
+            if (firstTimeBuyIsBetter) {
+                breakEvenYear = yearBuy.year;
+                firstTimeBuyIsBetter = false; // Ensure breakEvenYear is set only once
+            }
+        } else {
+            cell.style.color = 'orange';
+        }
     }
     container.appendChild(table);
 }
