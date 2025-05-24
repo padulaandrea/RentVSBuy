@@ -21,7 +21,7 @@ function getInputs() {
     inputs.monthlyExpenses = getFloatValue('monthlyExpenses');
     inputs.additionalBonus = getFloatValue('additionalBonus'); // This is an annual amount
     inputs.aduMonthlyIncome = getFloatValue('aduMonthlyIncome'); // ADU Income
-
+    inputs.HOA = getFloatValue('HOA'); // HOA
     // Home Purchase Inputs
     inputs.homePrice = getFloatValue('homePrice');
     inputs.downPaymentPercentDecimal = getPercentageValue('downPaymentPercent');
@@ -141,6 +141,7 @@ function calculateBuyingScenario(inputs) {
         buyingClosingCostsPercentDecimal,
         currentSavings,
         additionalBonus,
+        HOA,
         aduMonthlyIncome // Destructure new input
     } = inputs;
 
@@ -231,8 +232,9 @@ function calculateBuyingScenario(inputs) {
         const monthlyHomeInsurance = (currentHomeValue * inputs.homeInsuranceRateDecimal) / 12;
         const annualHomeInsuranceThisYear = monthlyHomeInsurance * 12;
         const annualMaintenanceThisYear = inputs.monthlyMaintenance * 12; // Constant based on input
+        const annualHOA = inputs.HOA *12;
 
-        const totalAnnualHousingCosts = actualAnnualMortgagePaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
+        const totalAnnualHousingCosts = actualAnnualMortgagePaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear+annualHOA;
 
         const netMonthlyPayForCalc = netMonthlyPay + (additionalBonus / 12) + aduMonthlyIncome;
         const annualNetIncomeInclADU = netMonthlyPayForCalc * 12;
@@ -253,7 +255,7 @@ function calculateBuyingScenario(inputs) {
         const unrecoverableCostsThisYear = interestPaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
         totalUnrecoverableBuyCosts += unrecoverableCostsThisYear;
 
-        const totalMonthlyOutlay = actualAnnualMortgagePaidThisYear/12 + currentMonthlyPropertyTax + monthlyHomeInsurance + inputs.monthlyMaintenance;
+        const totalMonthlyOutlay = actualAnnualMortgagePaidThisYear/12 + currentMonthlyPropertyTax + monthlyHomeInsurance + inputs.monthlyMaintenance + inputs.HOA;
         cumulativeOutlay += totalAnnualHousingCosts;
 
 
@@ -267,6 +269,7 @@ function calculateBuyingScenario(inputs) {
             monthlyHomeInsurance: monthlyHomeInsurance,
             monthlyMaintenance: inputs.monthlyMaintenance,
             totalMonthlyOutlay: totalMonthlyOutlay,
+            HOA: inputs.HOA,
             annualTotalOutlay: totalAnnualHousingCosts, // Use the consistent totalAnnualHousingCosts
             cumulativeOutlay: cumulativeOutlay,
             currentMonthlyExpenses: currentMonthlyExpenses,
@@ -320,6 +323,7 @@ function displayInputSummary(inputs) {
         netMonthlyPay,
         additionalBonus,
         monthlyExpenses,
+        HOA,
         aduMonthlyIncome // Destructure for summary
     } = inputs;
 
@@ -342,10 +346,10 @@ function displayInputSummary(inputs) {
 
     const monthlyPropertyTax = (homePrice * propertyTaxRateDecimal) / 12;
     const monthlyHomeInsurance = (homePrice * homeInsuranceRateDecimal) / 12;
-    const totalMonthlyHousingCostsBuy = monthlyMortgagePayment + monthlyPropertyTax + monthlyHomeInsurance + monthlyMaintenance;
+    const totalMonthlyHousingCostsBuy = monthlyMortgagePayment + monthlyPropertyTax + monthlyHomeInsurance + monthlyMaintenance +HOA;
 
     // Include ADU income in net monthly income for summary calculation
-    const netMonthlyIncome = netMonthlyPay + (additionalBonus / 12) + aduMonthlyIncome;
+    const netMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
     const savingsSurplusRenting = netMonthlyIncome - monthlyExpenses - monthlyRent - aduMonthlyIncome; // ADU income not available when renting
     const savingsSurplusBuying = netMonthlyIncome - monthlyExpenses - totalMonthlyHousingCostsBuy;
 
@@ -412,6 +416,7 @@ function displayInputSummary(inputs) {
     addSummaryRow(tbody, 'Property Tax:', monthlyPropertyTax, 'currency');
     addSummaryRow(tbody, 'Home Insurance:', monthlyHomeInsurance, 'currency');
     addSummaryRow(tbody, 'Maintenance:', monthlyMaintenance, 'currency');
+    addSummaryRow(tbody, 'HOA:', HOA, 'currency');
     addSummaryRow(tbody, 'Total Monthly Housing Costs (Buy):', totalMonthlyHousingCostsBuy, 'currency');
 
     addSectionHeader(tbody, 'Estimated Monthly Costs (Rent - Initial)');
@@ -420,6 +425,7 @@ function displayInputSummary(inputs) {
     addSectionHeader(tbody, 'Estimated Monthly Cash Flow (Initial)');
     addSummaryRow(tbody, 'Net Monthly Income:', netMonthlyIncome, 'currency');
     addSummaryRow(tbody, 'Monthly Non-Housing Expenses:', monthlyExpenses, 'currency');
+    addSummaryRow(tbody, 'Additional Monthly Income (Buying):', aduMonthlyIncome, 'currency');
     addSummaryRow(tbody, 'Savings Surplus (Renting):', savingsSurplusRenting, 'currency');
     addSummaryRow(tbody, 'Savings Surplus (Buying):', savingsSurplusBuying, 'currency');
 
@@ -591,7 +597,7 @@ function displayDetailedBuyTable(buyData) {
 
     const headers = [
         'Year', 'Mortgage Balance', 'Principal Paid (Annual)', 'Interest Paid (Annual)', 'Monthly P&I',
-        'Monthly Property Tax (YoY 2% inc.)', 'Monthly Home Insurance', 'Monthly Maintenance',
+        'Monthly Property Tax (YoY 2% inc.)', 'Monthly Home Insurance', 'Monthly HOA','Monthly Maintenance',
         'Total Monthly Outlay', 'Annual Total Outlay', 'Cumulative Outlay',
         'Monthly Expenses (YoY 3% inc.)', 'Net Monthly Pay (incl. ADU)',
         'Monthly Invested (from income)', 'Annual Invested (from income)',
@@ -615,6 +621,7 @@ function displayDetailedBuyTable(buyData) {
         row.insertCell().textContent = formatCurrency(dataYear.monthlyPI);
         row.insertCell().textContent = formatCurrency(dataYear.currentMonthlyPropertyTax);
         row.insertCell().textContent = formatCurrency(dataYear.monthlyHomeInsurance);
+        row.insertCell().textContent = formatCurrency(dataYear.HOA);
         row.insertCell().textContent = formatCurrency(dataYear.monthlyMaintenance);
         row.insertCell().textContent = formatCurrency(dataYear.totalMonthlyOutlay);
         row.insertCell().textContent = formatCurrency(dataYear.annualTotalOutlay);
@@ -835,7 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInputSync('downPaymentPercent', 'downPaymentPercentSlider', 'downPaymentPercentSliderValueOutput');
     setupInputSync('buyingClosingCostsPercent', 'buyingClosingCostsPercentSlider', 'buyingClosingCostsPercentSliderValueOutput');
     setupInputSync('aduMonthlyIncome', 'aduMonthlyIncomeSlider', 'aduMonthlyIncomeSliderValueOutput', '$'); // Sync for ADU
-
+    setupInputSync('HOA','HOASlider', 'HOASliderValueOutput','$');
     // Tab Control Logic
     const tabButtonComparison = document.getElementById('tabButtonComparison');
     const tabButtonDetailed = document.getElementById('tabButtonDetailed');
