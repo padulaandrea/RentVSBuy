@@ -731,15 +731,15 @@ function displayCharts(rentData, buyData) {
                 {
                     label: 'Renting Net Worth',
                     data: netWorthRentValues,
-                    borderColor: 'rgba(255, 99, 132, 1)', // Reddish
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: '#F5A623', // Vibrant Orange
+                    backgroundColor: 'rgba(245, 166, 35, 0.2)',
                     tension: 0.1
                 },
                 {
                     label: 'Buying Net Worth',
                     data: netWorthBuyValues,
-                    borderColor: 'rgba(54, 162, 235, 1)', // Bluish
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: '#4A90E2', // Modern Blue
+                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
                     tension: 0.1
                 }
             ]
@@ -765,15 +765,15 @@ function displayCharts(rentData, buyData) {
                 {
                     label: 'Unrecoverable Costs (Rent)',
                     data: unrecoverableRentValues,
-                    borderColor: 'rgba(255, 159, 64, 1)', // Orangeish
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: '#50E3C2', // Green/Teal
+                    backgroundColor: 'rgba(80, 227, 194, 0.2)',
                     tension: 0.1
                 },
                 {
                     label: 'Unrecoverable Costs (Buy)',
                     data: unrecoverableBuyValues,
-                    borderColor: 'rgba(75, 192, 192, 1)', // greenish-blue
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: '#3B71B8', // Darker/complementary Blue
+                    backgroundColor: 'rgba(59, 113, 184, 0.2)',
                     tension: 0.1
                 }
             ]
