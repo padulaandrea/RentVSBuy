@@ -56,7 +56,6 @@ function calculateRentingScenario(inputs) {
     console.log("calculateRentingScenario received inputs:", inputs);
     const yearsToSimulate = 30;
     const rentResults = [];
-    const rentersInsuranceMonthly = 35; // Added fixed renter's insurance
 
     let currentAnnualRent = inputs.monthlyRent * 12;
     let investedAssets = inputs.currentSavings;
@@ -80,7 +79,7 @@ function calculateRentingScenario(inputs) {
         }
 
         const monthlyRentForYear = currentAnnualRent / 12;
-        const monthlyCashOutflowRent = monthlyRentForYear + rentersInsuranceMonthly; // Calculated monthly cash outflow
+        const monthlyCashOutflowRent = monthlyRentForYear ; // Calculated monthly cash outflow
         const calculatedNetMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
 
         const annualLivingExpenses = currentMonthlyExpenses * 12;
@@ -109,7 +108,6 @@ function calculateRentingScenario(inputs) {
             netWorth: investedAssets,
             calculatedNetMonthlyIncome: calculatedNetMonthlyIncome,
             totalUnrecoverableCost: totalRentPaid, // Explicitly using the same value for consistency
-            rentersInsuranceMonthly: rentersInsuranceMonthly,
             monthlyCashOutflowRent: monthlyCashOutflowRent
         });
     }
@@ -605,7 +603,7 @@ function displayUnrecoverableCosts(rentData, buyData) {
         row.insertCell().textContent = yearBuy.totalUnrecoverableCost !== undefined ? formatCurrency(yearBuy.totalUnrecoverableCost) : 'N/A';
         // Better Option cell
         cell = row.insertCell();
-        const isBuyBetter = yearBuy.totalUnrecoverableCost > yearRent.totalUnrecoverableCost;
+        const isBuyBetter = yearBuy.totalUnrecoverableCost < yearRent.totalUnrecoverableCost;
         const betterOption = isBuyBetter ? 'Buy' : 'Rent';
         cell.textContent = betterOption;
 
