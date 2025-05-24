@@ -4,7 +4,7 @@ body {
     margin: 20px auto; /* Centering body and adding margin */
     padding: 20px;
     background-color: #f4f4f4;
-    max-width: 800px; /* Max width for the main content area */
+    /* max-width: 800px; /* Max width for the main content area */ */
 }
 
 /* Heading Styling */
@@ -151,7 +151,7 @@ input[type="range"] {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
-#input-summary-container th, 
+#input-summary-container th,
 #input-summary-container td {
     border: 1px solid #e0e0e0; /* Slightly lighter border */
     padding: 8px 10px;
@@ -166,7 +166,7 @@ input[type="range"] {
 
 /* For two-column layout in summary table where first td is like a header */
 #input-summary-container td:first-child {
-    font-weight: normal; 
+    font-weight: normal;
     background-color: #fdfdfd;
     width: 40%; /* Give more space to description */
     color: #333;
@@ -231,47 +231,47 @@ canvas {
 .tabs-navigation {
     margin-bottom: 20px;
     border-bottom: 2px solid #ccc;
-    display: flex; 
+    display: flex;
 }
 .tab-button {
     padding: 10px 20px;
     cursor: pointer;
-    border: none; 
-    border-bottom: 2px solid transparent; 
-    background-color: transparent; 
+    border: none;
+    border-bottom: 2px solid transparent;
+    background-color: transparent;
     font-size: 1em;
-    margin-right: 5px; 
-    transition: border-color 0.3s ease, color 0.3s ease; 
+    margin-right: 5px;
+    transition: border-color 0.3s ease, color 0.3s ease;
 }
 .tab-button:hover {
-    color: #007bff; 
+    color: #007bff;
 }
 .tab-button.active {
-    border-bottom-color: #007bff; 
+    border-bottom-color: #007bff;
     font-weight: bold;
     color: #007bff;
 }
 
 /* Tab Content Styling */
 .tab-content {
-    display: none; 
-    padding-top: 10px; 
+    display: none;
+    padding-top: 10px;
 }
 .tab-content.active-tab-content {
-    display: block; 
+    display: block;
 }
 
 /* Detailed View Specific Styling */
 #detailed-view-tab-content h2 {
     text-align: center;
-    margin-top: 20px;  
+    margin-top: 20px;
     margin-bottom: 15px;
     color: #333;
 }
 
 #detailed-rent-table-container,
 #detailed-buy-table-container {
-    margin-bottom: 30px; 
+    margin-bottom: 30px;
 }
 
 #detailed-rent-table-container table,
@@ -280,8 +280,8 @@ canvas {
     border-collapse: collapse;
     margin-top: 10px;
     /* Styling to match other tables */
-    background-color: #fff; 
-    border-radius: 8px; 
+    background-color: #fff;
+    border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 #detailed-rent-table-container th, #detailed-rent-table-container td,
@@ -295,9 +295,9 @@ canvas {
     background-color: #e9e9e9;
 }
 /* Example for right-aligning numerical data in detailed tables (will need specific column targeting later) */
-/* 
-#detailed-rent-table-container td:nth-child(n), 
-#detailed-buy-table-container td:nth-child(n) { 
-    text-align: right; 
-} 
+/*
+#detailed-rent-table-container td:nth-child(n),
+#detailed-buy-table-container td:nth-child(n) {
+    text-align: right;
+}
 */
