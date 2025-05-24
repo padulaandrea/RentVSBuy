@@ -2,6 +2,7 @@
 
 let netWorthChartInstance = null;
 let unrecoverableCostsChartInstance = null;
+let monthlyCashFlowChartInstance = null; // Added for Monthly Cash Flow chart
 
 /**
  * Retrieves and processes input values from the form.
@@ -55,6 +56,7 @@ function calculateRentingScenario(inputs) {
     console.log("calculateRentingScenario received inputs:", inputs);
     const yearsToSimulate = 30;
     const rentResults = [];
+    const rentersInsuranceMonthly = 35; // Added fixed renter's insurance
 
     let currentAnnualRent = inputs.monthlyRent * 12;
     let investedAssets = inputs.currentSavings;
@@ -78,6 +80,7 @@ function calculateRentingScenario(inputs) {
         }
 
         const monthlyRentForYear = currentAnnualRent / 12;
+        const monthlyCashOutflowRent = monthlyRentForYear + rentersInsuranceMonthly; // Calculated monthly cash outflow
         const calculatedNetMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
 
         const annualLivingExpenses = currentMonthlyExpenses * 12;
@@ -105,7 +108,9 @@ function calculateRentingScenario(inputs) {
             beginningInvestedSavings: beginningInvestedSavings,
             netWorth: investedAssets,
             calculatedNetMonthlyIncome: calculatedNetMonthlyIncome,
-            totalUnrecoverableCost: totalRentPaid // Explicitly using the same value for consistency
+            totalUnrecoverableCost: totalRentPaid, // Explicitly using the same value for consistency
+            rentersInsuranceMonthly: rentersInsuranceMonthly,
+            monthlyCashOutflowRent: monthlyCashOutflowRent
         });
     }
 
@@ -256,6 +261,11 @@ function calculateBuyingScenario(inputs) {
         const unrecoverableCostsThisYear = interestPaidThisYear + annualPropertyTaxThisYear + annualHomeInsuranceThisYear + annualMaintenanceThisYear;
         totalUnrecoverableBuyCosts += unrecoverableCostsThisYear;
 
+        // Calculate monthlyCashOutflowBuy
+        const monthlyCashOutflowBuy = monthlyMortgagePayment + currentMonthlyPropertyTax + monthlyHomeInsurance + inputs.HOA + inputs.monthlyMaintenance;
+        // Calculate LTV Ratio
+        const ltvRatio = currentHomeValue > 0 ? (remainingLoanBalance / currentHomeValue) * 100 : 0;
+
         const totalMonthlyOutlay = actualAnnualMortgagePaidThisYear/12 + currentMonthlyPropertyTax + monthlyHomeInsurance + inputs.monthlyMaintenance + inputs.HOA;
         cumulativeOutlay += totalAnnualHousingCosts;
 
@@ -281,7 +291,9 @@ function calculateBuyingScenario(inputs) {
             homeValue: currentHomeValue,
             homeEquityNetProfitFromSale: homeEquityNetOfSaleCost,
             totalUnrecoverableCost: totalUnrecoverableBuyCosts,
-            netWorth: netWorth
+            netWorth: netWorth,
+            monthlyCashOutflowBuy: monthlyCashOutflowBuy,
+            ltvRatio: ltvRatio
         });
     }
 
@@ -333,6 +345,8 @@ function displayInputSummary(inputs) {
     const totalUpfrontCosts = downPaymentAmount + closingCostsAmount;
     const loanAmount = homePrice - downPaymentAmount;
     const savingsAfterUpfrontCosts = currentSavings - totalUpfrontCosts;
+
+    const initialLtvRatio = inputs.homePrice > 0 ? (loanAmount / inputs.homePrice) * 100 : 0;
 
     const monthlyInterestRate = interestRateDecimal / 12;
     const numberOfPayments = 30 * 12; // Assuming 30 years
@@ -411,6 +425,20 @@ function displayInputSummary(inputs) {
     addSummaryRow(tbody, 'Total Upfront Costs:', totalUpfrontCosts, 'currency');
     addSummaryRow(tbody, 'Loan Amount:', loanAmount, 'currency');
     addSummaryRow(tbody, 'Savings After Upfront Costs:', savingsAfterUpfrontCosts, 'currency');
+
+    addSectionHeader(tbody, 'Loan Details (Buying)');
+    addSummaryRow(tbody, 'Home Purchase Price (for LTV):', inputs.homePrice, 'currency');
+    addSummaryRow(tbody, 'Initial Loan Amount:', loanAmount, 'currency');
+    addSummaryRow(tbody, 'Initial LTV Ratio:', initialLtvRatio, 'percent');
+
+    const ltvSignificanceRow = tbody.insertRow();
+    const ltvSignificanceCellLabel = ltvSignificanceRow.insertCell();
+    ltvSignificanceCellLabel.textContent = 'LTV Significance:';
+    ltvSignificanceCellLabel.style.verticalAlign = 'top'; // Align label to top if text is long
+    const ltvSignificanceCellValue = ltvSignificanceRow.insertCell();
+    ltvSignificanceCellValue.textContent = "A higher LTV (e.g., above 80%) often means you'll pay Private Mortgage Insurance (PMI), an additional unrecoverable cost that protects the lender. A lower LTV indicates more equity and often better loan terms.";
+    // Optional: Add styling to make the text wrap or format nicely.
+    ltvSignificanceCellValue.style.whiteSpace = 'normal'; // Allow text to wrap
 
     addSectionHeader(tbody, 'Estimated Monthly Costs (Buy - Initial)');
     addSummaryRow(tbody, 'Mortgage Principal & Interest:', monthlyMortgagePayment, 'currency');
@@ -618,7 +646,7 @@ function displayDetailedBuyTable(buyData) {
         'Monthly Expenses (YoY 3% inc.)', 'Net Monthly Pay incl. ADU (YoY 3% inc.)',
         'Monthly Invested (from income)', 'Annual Invested (from income)',
         'Beginning Invested Savings', 'Home Value', 'Home Equity / Net Profit from Sale',
-        'Lost Cost (Cumulative)', 'End of Year Net Worth'
+        'LTV Ratio (%)', 'Lost Cost (Cumulative)', 'End of Year Net Worth' // Added LTV Ratio
     ];
 
     headers.forEach(text => {
@@ -649,6 +677,15 @@ function displayDetailedBuyTable(buyData) {
         row.insertCell().textContent = formatCurrency(dataYear.beginningInvestedSavings);
         row.insertCell().textContent = formatCurrency(dataYear.homeValue);
         row.insertCell().textContent = formatCurrency(dataYear.homeEquityNetProfitFromSale);
+
+        const ltvCell = row.insertCell(); // Cell for LTV Ratio
+        const ltv = dataYear.ltvRatio;
+        ltvCell.textContent = ltv.toFixed(2) + '%';
+        if (ltv > 80) {
+            ltvCell.textContent += ' (PMI likely)';
+            // Consider adding a class for styling: ltvCell.classList.add('pmi-warning');
+        }
+
         row.insertCell().textContent = formatCurrency(dataYear.totalUnrecoverableCost); // Matches 'Lost Cost (Cumulative)'
         row.insertCell().textContent = formatCurrency(dataYear.netWorth);
     });
@@ -806,6 +843,110 @@ function displayCharts(rentData, buyData) {
     });
 }
 
+/**
+ * Displays the monthly cash flow comparison in a table and a chart.
+ * @param {Array<object>} rentData - Array of yearly data from calculateRentingScenario.
+ * @param {Array<object>} buyData - Array of yearly data from calculateBuyingScenario.
+ */
+function displayMonthlyCashFlowComparison(rentData, buyData) {
+    const container = document.getElementById('monthly-cash-flow-container');
+    if (!container) {
+        console.error("Monthly cash flow container not found!");
+        return;
+    }
+
+    // Clear previous table and chart (similar to displayUnrecoverableCosts)
+    const existingTable = container.querySelector('table');
+    if (existingTable) {
+        existingTable.remove();
+    }
+    // Destroy previous chart instance if it exists
+    if (monthlyCashFlowChartInstance) {
+        monthlyCashFlowChartInstance.destroy();
+        monthlyCashFlowChartInstance = null; // Good practice
+    }
+
+    if (!rentData || !buyData || rentData.length === 0 || buyData.length === 0) {
+        // Optionally display a message if data is missing
+        const canvas = document.getElementById('monthlyCashFlowChart');
+        if (canvas) {
+            const mcfCtx = canvas.getContext('2d');
+            mcfCtx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+        }
+        // You might want to also clear the H2 title or hide the container
+        // For now, just don't create the table/chart if data isn't there
+        return;
+    }
+
+    // Create Table
+    const table = document.createElement('table');
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    const headers = ['Year', 'Renting Monthly Outflow', 'Buying Monthly Outflow', 'Lower Outflow'];
+    headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+
+    const tbody = table.createTBody();
+    for (let i = 0; i < rentData.length; i++) {
+        if (i >= buyData.length) continue; // Safety check
+
+        const yearRent = rentData[i];
+        const yearBuy = buyData[i];
+        const row = tbody.insertRow();
+
+        row.insertCell().textContent = yearRent.year;
+        row.insertCell().textContent = formatCurrency(yearRent.monthlyCashOutflowRent);
+        row.insertCell().textContent = formatCurrency(yearBuy.monthlyCashOutflowBuy);
+
+        const lowerOutflow = yearRent.monthlyCashOutflowRent <= yearBuy.monthlyCashOutflowBuy ? 'Rent' : 'Buy';
+        const cellLowerOutflow = row.insertCell();
+        cellLowerOutflow.textContent = lowerOutflow;
+        cellLowerOutflow.style.color = lowerOutflow === 'Rent' ? 'orange' : 'green';
+    }
+    container.appendChild(table); // Add table before the chart div
+
+    // Chart Creation
+    const mcfCtx = document.getElementById('monthlyCashFlowChart').getContext('2d');
+    const years = rentData.map(d => d.year);
+    const monthlyCashFlowRentValues = rentData.map(d => d.monthlyCashOutflowRent);
+    const monthlyCashFlowBuyValues = buyData.map(d => d.monthlyCashOutflowBuy);
+
+    monthlyCashFlowChartInstance = new Chart(mcfCtx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Renting Monthly Outflow',
+                    data: monthlyCashFlowRentValues,
+                    borderColor: '#F5A623', // Vibrant Orange
+                    backgroundColor: 'rgba(245, 166, 35, 0.2)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Buying Monthly Outflow',
+                    data: monthlyCashFlowBuyValues,
+                    borderColor: '#4A90E2', // Modern Blue
+                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                title: { display: true, text: 'Monthly Cash Flow Over Time' },
+                tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}` } }
+            },
+            scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } }
+        }
+    });
+}
+
 
 // Event Listener for the Calculate Button
 document.addEventListener('DOMContentLoaded', () => {
@@ -892,9 +1033,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const buyData = calculateBuyingScenario(userInputs);
             displayResults(rentData, buyData);
             displayUnrecoverableCosts(rentData, buyData);
-            displayCharts(rentData, buyData); // Call the new chart function
-            displayDetailedRentTable(rentData); // Added for detailed rent table
-            displayDetailedBuyTable(buyData);   // Added for detailed buy table
+            displayCharts(rentData, buyData);
+            displayMonthlyCashFlowComparison(rentData, buyData); // Added call for Monthly Cash Flow
+            displayDetailedRentTable(rentData);
+            displayDetailedBuyTable(buyData);
         });
     } else {
         console.error("Calculate button not found!");
