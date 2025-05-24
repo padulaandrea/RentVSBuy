@@ -1,5 +1,8 @@
 // script.js
 
+let netWorthChartInstance = null;
+let unrecoverableCostsChartInstance = null;
+
 /**
  * Retrieves and processes input values from the form.
  * Converts percentage inputs to decimal format.
@@ -17,6 +20,7 @@ function getInputs() {
     inputs.netMonthlyPay = getFloatValue('netMonthlyPay');
     inputs.monthlyExpenses = getFloatValue('monthlyExpenses');
     inputs.additionalBonus = getFloatValue('additionalBonus'); // This is an annual amount
+    inputs.aduMonthlyIncome = getFloatValue('aduMonthlyIncome'); // ADU Income
 
     // Home Purchase Inputs
     inputs.homePrice = getFloatValue('homePrice');
@@ -54,6 +58,7 @@ function calculateRentingScenario(inputs) {
 
     let currentAnnualRent = inputs.monthlyRent * 12;
     let investedAssets = inputs.currentSavings;
+    let totalRentPaid = 0; // Initialize totalRentPaid
 
     // Extracting necessary inputs for clarity within the loop
     const {
@@ -80,12 +85,14 @@ function calculateRentingScenario(inputs) {
         investedAssets += savingsThisYear;
         // Then apply S&P return to the new total
         investedAssets *= (1 + spyReturnDecimal);
+        totalRentPaid += currentAnnualRent; // Accumulate rent paid
 
         rentResults.push({
             year: year,
             rentPaidThisYear: currentAnnualRent,
             netWorth: investedAssets,
-            savingsForYear: savingsThisYear // For detailed analysis
+            savingsForYear: savingsThisYear, // For detailed analysis
+            totalUnrecoverableCost: totalRentPaid // Add total unrecoverable cost
         });
     }
 
@@ -102,6 +109,7 @@ function calculateBuyingScenario(inputs) {
     console.log("calculateBuyingScenario received inputs:", inputs);
     const yearsToSimulate = 30;
     const buyResults = [];
+    let totalUnrecoverableBuyCosts = 0; // Initialize totalUnrecoverableBuyCosts
 
     const {
         homePrice,
@@ -116,7 +124,8 @@ function calculateBuyingScenario(inputs) {
         spyReturnDecimal,
         buyingClosingCostsPercentDecimal,
         currentSavings,
-        additionalBonus
+        additionalBonus,
+        aduMonthlyIncome // Destructure new input
     } = inputs;
 
     // Initial Purchase Calculations
@@ -200,7 +209,8 @@ function calculateBuyingScenario(inputs) {
         // totalHousingCostsThisYear based on actual mortgage payments made + other costs
         const totalHousingCostsThisYear = actualAnnualMortgagePaid + propertyTaxPaidThisYear + homeInsurancePaidThisYear + maintenancePaidThisYear;
 
-        const annualNetIncome = (netMonthlyPay * 12) + additionalBonus;
+        // Include ADU income in annual net income for buying scenario
+        const annualNetIncome = (netMonthlyPay * 12) + additionalBonus + (aduMonthlyIncome * 12);
         const annualLivingExpenses = monthlyExpenses * 12; // General living expenses
         const savingsThisYear = annualNetIncome - totalHousingCostsThisYear - annualLivingExpenses;
 
@@ -212,8 +222,12 @@ function calculateBuyingScenario(inputs) {
         }
 
 
-        const homeEquity = currentHomeValue - (remainingLoanBalance > 0 ? remainingLoanBalance : 0);
+        // Factor in 6% selling cost for home equity calculation
+        const homeEquity = (currentHomeValue * 0.94) - (remainingLoanBalance > 0 ? remainingLoanBalance : 0);
         const netWorth = homeEquity + investedAssets;
+
+        const unrecoverableThisYear = interestPaidThisYear + propertyTaxPaidThisYear + homeInsurancePaidThisYear + maintenancePaidThisYear;
+        totalUnrecoverableBuyCosts += unrecoverableThisYear;
 
         buyResults.push({
             year: year,
@@ -225,7 +239,8 @@ function calculateBuyingScenario(inputs) {
             interestPaid: interestPaidThisYear,
             principalPaid: principalPaidThisYear,
             annualHousingCost: totalHousingCostsThisYear, // For more detailed analysis later
-            savingsForYear: savingsThisYear
+            savingsForYear: savingsThisYear,
+            totalUnrecoverableCost: totalUnrecoverableBuyCosts // Add total unrecoverable cost
         });
     }
 
@@ -267,7 +282,8 @@ function displayInputSummary(inputs) {
         monthlyRent,
         netMonthlyPay,
         additionalBonus,
-        monthlyExpenses
+        monthlyExpenses,
+        aduMonthlyIncome // Destructure for summary
     } = inputs;
 
     const downPaymentAmount = homePrice * downPaymentPercentDecimal;
@@ -291,9 +307,11 @@ function displayInputSummary(inputs) {
     const monthlyHomeInsurance = (homePrice * homeInsuranceRateDecimal) / 12;
     const totalMonthlyHousingCostsBuy = monthlyMortgagePayment + monthlyPropertyTax + monthlyHomeInsurance + monthlyMaintenance;
 
-    const netMonthlyIncome = netMonthlyPay + (additionalBonus / 12);
-    const savingsSurplusRenting = netMonthlyIncome - monthlyExpenses - monthlyRent;
+    // Include ADU income in net monthly income for summary calculation
+    const netMonthlyIncome = netMonthlyPay + (additionalBonus / 12) + aduMonthlyIncome;
+    const savingsSurplusRenting = netMonthlyIncome - monthlyExpenses - monthlyRent - aduMonthlyIncome; // ADU income not available when renting
     const savingsSurplusBuying = netMonthlyIncome - monthlyExpenses - totalMonthlyHousingCostsBuy;
+
 
     // --- 2. Create Table Structure ---
     const table = document.createElement('table');
@@ -341,6 +359,7 @@ function displayInputSummary(inputs) {
     addSummaryRow(tbody, 'Home Price:', homePrice, 'currency');
     addSummaryRow(tbody, 'Down Payment Percent:', downPaymentPercentDecimal * 100, 'percent');
     addSummaryRow(tbody, 'Interest Rate (Annual):', interestRateDecimal * 100, 'percent');
+    addSummaryRow(tbody, 'Monthly ADU Rent Income:', aduMonthlyIncome, 'currency'); // Display ADU Income
     addSummaryRow(tbody, 'Current Savings:', currentSavings, 'currency');
 
 
@@ -469,6 +488,156 @@ function displayResults(rentData, buyData) {
     resultsContainer.appendChild(summaryP);
 }
 
+/**
+ * Displays the unrecoverable costs in a table.
+ * @param {Array<object>} rentData - Array of yearly data from calculateRentingScenario.
+ * @param {Array<object>} buyData - Array of yearly data from calculateBuyingScenario.
+ */
+function displayUnrecoverableCosts(rentData, buyData) {
+    const container = document.getElementById('unrecoverable-costs-container');
+    
+    // Clear previous table if any, but keep H2 (or recreate H2 if preferred)
+    const existingTable = container.querySelector('table');
+    if (existingTable) {
+        existingTable.remove();
+    }
+
+    if (!rentData || !buyData || rentData.length === 0 || buyData.length === 0) {
+        // Optionally display a message if data is missing
+        // For now, just don't create the table if data isn't there
+        return; 
+    }
+
+    const table = document.createElement('table');
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
+    const headers = ['Year', 'Total Unrecoverable (Rent)', 'Total Unrecoverable (Buy)'];
+    headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+
+    const tbody = table.createTBody();
+    for (let i = 0; i < rentData.length; i++) {
+        // Check if corresponding buyData exists for safety, though they should have same length
+        if (i >= buyData.length) continue; 
+
+        const yearRent = rentData[i];
+        const yearBuy = buyData[i];
+        const row = tbody.insertRow();
+
+        row.insertCell().textContent = yearRent.year;
+        // Ensure totalUnrecoverableCost property exists before formatting
+        row.insertCell().textContent = yearRent.totalUnrecoverableCost !== undefined ? formatCurrency(yearRent.totalUnrecoverableCost) : 'N/A';
+        row.insertCell().textContent = yearBuy.totalUnrecoverableCost !== undefined ? formatCurrency(yearBuy.totalUnrecoverableCost) : 'N/A';
+    }
+    container.appendChild(table);
+}
+
+/**
+ * Displays charts for Net Worth and Unrecoverable Costs.
+ * @param {Array<object>} rentData - Array of yearly data from calculateRentingScenario.
+ * @param {Array<object>} buyData - Array of yearly data from calculateBuyingScenario.
+ */
+function displayCharts(rentData, buyData) {
+    if (!rentData || !buyData || rentData.length === 0 || buyData.length === 0) {
+        // Optionally clear charts or display a message if data is missing
+        if (netWorthChartInstance) netWorthChartInstance.destroy();
+        if (unrecoverableCostsChartInstance) unrecoverableCostsChartInstance.destroy();
+        netWorthChartInstance = null;
+        unrecoverableCostsChartInstance = null;
+        return; 
+    }
+
+    const years = rentData.map(d => d.year); // Assuming years are consistent
+
+    // Data for Net Worth Chart
+    const netWorthRentValues = rentData.map(d => d.netWorth);
+    const netWorthBuyValues = buyData.map(d => d.netWorth);
+
+    // Data for Unrecoverable Costs Chart
+    const unrecoverableRentValues = rentData.map(d => d.totalUnrecoverableCost);
+    const unrecoverableBuyValues = buyData.map(d => d.totalUnrecoverableCost);
+
+    // Destroy previous charts if they exist
+    if (netWorthChartInstance) {
+        netWorthChartInstance.destroy();
+    }
+    if (unrecoverableCostsChartInstance) {
+        unrecoverableCostsChartInstance.destroy();
+    }
+
+    // Net Worth Chart
+    const nwCtx = document.getElementById('netWorthChart').getContext('2d');
+    netWorthChartInstance = new Chart(nwCtx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Renting Net Worth',
+                    data: netWorthRentValues,
+                    borderColor: 'rgba(255, 99, 132, 1)', // Reddish
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Buying Net Worth',
+                    data: netWorthBuyValues,
+                    borderColor: 'rgba(54, 162, 235, 1)', // Bluish
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true, 
+            plugins: {
+                title: { display: true, text: 'Net Worth Over Time' },
+                tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}` } }
+            },
+            scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } }
+        }
+    });
+
+    // Unrecoverable Costs Chart
+    const ucCtx = document.getElementById('unrecoverableCostsChart').getContext('2d');
+    unrecoverableCostsChartInstance = new Chart(ucCtx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Unrecoverable Costs (Rent)',
+                    data: unrecoverableRentValues,
+                    borderColor: 'rgba(255, 159, 64, 1)', // Orangeish
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Unrecoverable Costs (Buy)',
+                    data: unrecoverableBuyValues,
+                    borderColor: 'rgba(75, 192, 192, 1)', // greenish-blue
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                title: { display: true, text: 'Total Unrecoverable Costs Over Time' },
+                tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}` } }
+            },
+            scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } }
+        }
+    });
+}
+
+
 // Event Listener for the Calculate Button
 document.addEventListener('DOMContentLoaded', () => {
     const calculateButton = document.getElementById('calculateButton');
@@ -519,6 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInputSync('homeAppreciation', 'homeAppreciationSlider', 'homeAppreciationSliderValueOutput');
     setupInputSync('downPaymentPercent', 'downPaymentPercentSlider', 'downPaymentPercentSliderValueOutput');
     setupInputSync('buyingClosingCostsPercent', 'buyingClosingCostsPercentSlider', 'buyingClosingCostsPercentSliderValueOutput');
+    setupInputSync('aduMonthlyIncome', 'aduMonthlyIncomeSlider', 'aduMonthlyIncomeSliderValueOutput', '$'); // Sync for ADU
 
 
     if (calculateButton) {
@@ -529,6 +699,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const rentData = calculateRentingScenario(userInputs);
             const buyData = calculateBuyingScenario(userInputs);
             displayResults(rentData, buyData);
+            displayUnrecoverableCosts(rentData, buyData); 
+            displayCharts(rentData, buyData); // Call the new chart function
         });
     } else {
         console.error("Calculate button not found!");
